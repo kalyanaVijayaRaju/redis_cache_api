@@ -27,7 +27,7 @@ router.get("/:id", cacheUser, async (req, res) => {
   // ✅ Store result in Redis for 60 seconds
   await redisClient.setEx(
     `user:${userId}`,
-    60,
+    30,
     JSON.stringify(user)
   );
 
