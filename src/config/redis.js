@@ -1,17 +1,18 @@
 const redis = require("redis");
 
-// Try to load .env if dotenv is installed (no crash if it's not present)
 try { require("dotenv").config(); } catch (e) {}
 
-// Provide a sensible default so the app works without an env file
 const REDIS_URL = process.env.REDIS_URL || "redis://localhost:6379";
 
 const redisclient = redis.createClient({
     url: REDIS_URL,
+    socket: {
+        tls: true,   // ⭐ important for Upstash
+    }
 });
 
-redisclient.on("connect", () => {
-    console.log("✅ Redis Connected Successfully");
+redisclient.on("connect", async ()  =>  {
+   await console.log("✅ Redis Connected Successfully");
 });
 
 redisclient.on("error", (err) => {

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>JWT Auth Demo</title>
+  <style>
+    body {
+      font-family: Arial;
+      padding: 30px;
+    }
+    input, button {
+      margin: 5px;
+      padding: 8px;
+    }
+    #output {
+      margin-top: 20px;
+      color: green;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>JWT Authentication Demo (Cookie Based)</h2>
+
+  <h3>Register</h3>
+  <input id="regName" placeholder="Name">
+  <input id="regEmail" placeholder="Email">
+  <input id="regPassword" placeholder="Password" type="password">
+  <select id="regRole">
+    <option value="user">User</option>
+    <option value="admin">Admin</option>
+  </select>
+  <button onclick="register()">Register</button>
+
+  <h3>Login</h3>
+  <input id="loginEmail" placeholder="Email">
+  <input id="loginPassword" placeholder="Password" type="password">
+  <button onclick="login()">Login</button>
+
+  <h3>Protected Actions</h3>
+  <button onclick="getProfile()">Get Profile (JWT Required)</button>
+  <button onclick="adminAction()">Admin Only Action</button>
+
+  <h3>Logout</h3>
+  <button onclick="logout()">Logout</button>
+
+  <div id="output"></div>
+
+<script>
+
+// REGISTER
+async function register() {
+  const res = await fetch("http://localhost:5000/api/auth/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({
+      name: document.getElementById("regName").value,
+      email: document.getElementById("regEmail").value,
+      password: document.getElementById("regPassword").value,
+      role: document.getElementById("regRole").value
+    })
+  });
+
+  const data = await res.json();
+  document.getElementById("output").innerText = JSON.stringify(data);
+}
+
+// LOGIN
+async function login() {
+  const res = await fetch("http://localhost:5000/api/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",   // ⭐ IMPORTANT
+    body: JSON.stringify({
+      email: document.getElementById("loginEmail").value,
+      password: document.getElementById("loginPassword").value
+    })
+  });
+
+  const data = await res.json();
+  document.getElementById("output").innerText =
+    "Login successful. Cookie stored in browser.";
+}
+
+// GET PROFILE (Protected)
+async function getProfile() {
+  const res = await fetch("http://localhost:5000/api/users/profile", {
+    method: "GET",
+    credentials: "include"   // ⭐ sends cookie automatically
+  });
+
+  const data = await res.json();
+  document.getElementById("output").innerText = JSON.stringify(data);
+}
+
+// ADMIN ONLY
+async function adminAction() {
+  const res = await fetch("http://localhost:5000/api/users/admin", {
+    method: "GET",
+    credentials: "include"
+  });
+
+  const data = await res.json();
+  document.getElementById("output").innerText = JSON.stringify(data);
+}
+
+// LOGOUT
+async function logout() {
+  const res = await fetch("http://localhost:5000/api/auth/logout", {
+    method: "POST",
+    credentials: "include"
+  });
+
+  const data = await res.json();
+  document.getElementById("output").innerText = data.message;
+}
+
+</script>
+
+</body>
+</html>

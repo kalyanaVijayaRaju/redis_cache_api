@@ -1,32 +1,20 @@
 const mongoose = require("mongoose");
 
 const connectDB = async () => {
-  const directUri = process.env.MONGO_URI;
+  try {
+    console.log("🔗 Connecting to MongoDB...");
 
-  const options = {
-    serverSelectionTimeoutMS: 30000,
-    socketTimeoutMS: 45000,
-    tls: true,
-    retryWrites: false,
-  };
+    await mongoose.connect(process.env.MONGO_URI, {
+      serverSelectionTimeoutMS: 30000,
+      socketTimeoutMS: 45000,
+      family: 4   // 👈 IMPORTANT: forces IPv4 DNS resolution
+    });
 
-  if (directUri) {
-    try {
-      console.log(`\n🔗 Connecting to MongoDB...`);
-      
-      await mongoose.connect(directUri, options);
-      console.log("✅ MongoDB Connected Successfully");
-      return;
-    } catch (err) {
-      console.log("❌ MongoDB Connection Failed:", err.message);
-      process.exit(1);
-    }
+    console.log("✅ MongoDB Connected Successfully");
+  } catch (err) {
+    console.log("❌ MongoDB Connection Failed:", err.message);
+    process.exit(1);
   }
-
-  console.log("❌ No MongoDB connection string provided in environment");
-  process.exit(1);
 };
-
-module.exports = connectDB;
 
 module.exports = connectDB;
