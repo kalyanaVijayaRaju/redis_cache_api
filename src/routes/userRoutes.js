@@ -3,6 +3,7 @@ const User = require("../models/user");
 const redisClient = require("../config/redis");
 const cacheUser = require("../middleware/cacheMiddleware");
 const authMiddleware = require("../middleware/authMiddleware"); // ⭐ ADD
+const roleMiddleware = require("../middleware/roleMiddleware");   // ⭐ ADD
 
 const router = express.Router();
 
@@ -21,6 +22,23 @@ router.get("/profile", authMiddleware, async (req, res) => {
   }
 });
 
+// All users API GET
+router.get("/", authMiddleware, roleMiddleware("admin"), async (req, res) => {
+  try {
+    const users = await User.find().select("-password"); // Exclude passwords from response
+    res.json(users);
+
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+
+router.get( "/admin",authMiddleware,roleMiddleware("admin"),(req, res) => {
+    res.json({ message: "Welcome Admin! You have access." });
+  }
+);
+
 
 // ✅ Create User API (POST)
 router.post("/", async (req, res) => {
@@ -31,6 +49,40 @@ router.post("/", async (req, res) => {
     data: user,
   });
 });
+
+// Current user API (GET)
+
+router.get(
+  "/",
+  authMiddleware,
+  roleMiddleware("admin"),
+  async (req, res) => {
+    try {
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 5;
+
+      const skip = (page - 1) * limit;
+
+      const users = await User.find()
+        .select("-password")
+        .skip(skip)
+        .limit(limit);
+
+      const totalUsers = await User.countDocuments();
+
+      res.json({
+        totalUsers,
+        currentPage: page,
+        totalPages: Math.ceil(totalUsers / limit),
+        users
+      });
+
+    } catch (err) {
+      res.status(500).json({ message: err.message });
+    }
+  }
+);
+
 
 
 // ✅ Get User By ID API (GET + Redis Cache)
